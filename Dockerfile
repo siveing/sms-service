@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Builds the gateway from source, so the host only needs Docker.
 #   docker compose up -d --build
-FROM maven:3.9-eclipse-temurin-21 AS build
+# The jar is the same on every CPU, so it is built once on the builder's own platform
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY pom.xml .
 RUN mvn -B -q -ntp dependency:go-offline

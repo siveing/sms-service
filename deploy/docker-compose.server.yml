@@ -1,0 +1,41 @@
+# For a server: runs the published image, no source code needed. Copy it to the server as
+# docker-compose.yml next to a filled-in .env (see .env.example), then:
+#   docker compose up -d                          start
+#   docker compose pull && docker compose up -d   update to the newest image
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sms_gateway
+      POSTGRES_USER: sms_gateway
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - sms-gateway-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sms_gateway -d sms_gateway"]
+      interval: 5s
+      retries: 10
+
+  app:
+    image: ${SMS_GATEWAY_IMAGE:-ghcr.io/siveing/sms-service:latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sms_gateway
+      DB_USERNAME: sms_gateway
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_TOPIC_ID: ${TELEGRAM_TOPIC_ID:-}
+      TIME_ZONE: ${TIME_ZONE:-Asia/Phnom_Penh}
+    ports:
+      - "${PORT:-8094}:8094"
+
+volumes:
+  sms-gateway-db:

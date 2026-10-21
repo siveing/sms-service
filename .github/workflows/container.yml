@@ -39,6 +39,10 @@ jobs:
         id: verify
         run: mvn -B -ntp clean verify
 
+      # Only the small final stage runs per platform (the Maven stage uses the runner's own CPU)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -57,6 +61,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,prefix=sha-,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
 
       # No cache-from/cache-to: the image is now a JRE base plus one COPY, so there is
       # nothing expensive left to cache. The old type=gha,mode=max export was ~2.4 GB
@@ -66,7 +71,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

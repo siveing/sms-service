@@ -93,11 +93,15 @@ Put it behind HTTPS (a reverse proxy) before phones or apps reach it over the in
 
 ## Host it on a Mac server
 
-1. **Docker:** install Docker Desktop (or OrbStack) on the server and turn on *Start when you sign in*. Both containers restart on their own after that.
-2. **Code:** copy this folder to the server without `target/` and `.env`, e.g. `rsync -a --exclude target --exclude .env ./ macserver:~/sms-gateway/`.
-3. **Settings:** on the server, `cp .env.example .env` and fill it in. Set a real `ADMIN_PASSWORD` and `DB_PASSWORD` before the first start (the database keeps the password it was created with).
-4. **Start:** `docker compose up -d --build`, then `docker compose ps` should show both as healthy.
-5. **Update later:** copy the new code over and run `docker compose up -d --build` again; the data stays in the `sms-gateway-db` volume.
+CI publishes `ghcr.io/siveing/sms-service` on every push to `main` (`latest` plus `sha-<commit>`, for Intel and Apple-silicon Macs). The server needs only Docker, this compose file and a `.env`:
+
+1. **Docker:** install Docker Desktop (or OrbStack) and turn on *Start when you sign in*. Both containers restart on their own after that.
+2. **Files:** on the server, make a folder (e.g. `~/sms-gateway`) with `deploy/docker-compose.server.yml` saved as `docker-compose.yml`, and `.env.example` saved as `.env`.
+3. **Settings:** fill in `.env`: a real `ADMIN_PASSWORD` and `DB_PASSWORD` (the database keeps the password it was first created with), `PUBLIC_URL`, the Telegram values. Pin a version with `SMS_GATEWAY_IMAGE=ghcr.io/siveing/sms-service:sha-<commit>` if you prefer.
+4. **Start:** `docker compose up -d`, then `docker compose ps` shows both healthy. The console is on http://<server>:8094.
+5. **Update:** `docker compose pull && docker compose up -d`. Data stays in the `sms-gateway-db` volume.
+
+Building from source instead (`docker compose up -d --build` with the root `docker-compose.yml`) also works and needs no registry.
 
 ### Put it on the internet
 
