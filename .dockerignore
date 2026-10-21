@@ -1,0 +1,14 @@
+# Only pom.xml and src/ go into the build; secrets and build output never do.
+.git
+.github
+.idea
+.vscode
+.claude
+.mvn
+target
+*.log
+.env*
+README.md
+deploy
+docker-compose*.yml
+src/main/resources/application-local.yml

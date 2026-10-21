@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments :: head('Apps', false)}"></head>
+<body>
+<header th:replace="~{fragments :: topbar('apps')}"></header>
+<main class="page">
+    <div class="page-head">
+        <div>
+            <h1>Apps</h1>
+            <p class="muted">Apps that send SMS through the API. Each has its own key, sent in the X-Api-Key header.</p>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments :: flash}"></th:block>
+
+    <div class="banner warn" th:unless="${telegram.configured}">
+        Telegram is not set up, so apps switched to Telegram have nothing to post with. Start the gateway with
+        TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (see the README).
+    </div>
+
+    <div class="banner key" th:if="${issued}">
+        <span class="title" th:text="|Key for ${issued.name}|">Key for notification-service</span>
+        <span class="muted">Copy it now. It is shown only this once; if it is lost, give the app a new key.</span>
+        <div class="secret"><code id="issued-key" th:text="${issued.key}">sgc_…</code>
+            <button class="button secondary small" type="button" data-copy="issued-key">Copy</button></div>
+        <span class="muted small">Try it:</span>
+        <pre class="code" th:text="${example}">curl …</pre>
+    </div>
+
+    <section class="card">
+        <div class="card-head">
+            <form class="inline-form" th:action="@{/apps}" th:object="${form}" method="post">
+                <div class="field">
+                    <label for="name">Add an app</label>
+                    <input id="name" th:field="*{name}" placeholder="e.g. notification-service" maxlength="100" required>
+                </div>
+                <button class="button" type="submit">Add and make a key</button>
+            </form>
+        </div>
+        <div class="empty" th:if="${#lists.isEmpty(rows)}">No apps yet. Add one to get its API key.</div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(rows)}">
+            <table>
+                <thead>
+                <tr>
+                    <th>App</th>
+                    <th>Key</th>
+                    <th>Status</th>
+                    <th>Delivers by</th>
+                    <th>Last sent</th>
+                    <th class="num">Asked, 24 h</th>
+                    <th>Added</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="app : ${rows}">
+                    <td th:text="${app.name}">notification-service</td>
+                    <td class="mono muted" th:text="${app.keyHint}">sgc_ab12…</td>
+                    <td><span class="badge" th:classappend="${app.enabled} ? 'on'" th:text="${app.enabled} ? 'Enabled' : 'Disabled'">Enabled</span></td>
+                    <td><span class="badge" th:classappend="${app.channel.name() == 'TELEGRAM'} ? 'tg'" th:text="${app.channel.label()}">Real SMS</span></td>
+                    <td class="muted" th:text="${app.lastUsed} ?: 'Never'">2 min ago</td>
+                    <td class="num" th:text="${app.sent}">0</td>
+                    <td class="muted" th:text="${app.added}">21 Oct 2026</td>
+                    <td>
+                        <div class="actions">
+                            <form th:action="@{/apps/{id}/channel(id=${app.id})}" method="post">
+                                <input type="hidden" name="channel" th:value="${app.channel.name() == 'TELEGRAM'} ? 'SMS' : 'TELEGRAM'">
+                                <button th:if="${app.channel.name() == 'SMS'}" class="button secondary small" type="submit"
+                                        data-confirm="Send this app's messages to the Telegram test group instead of texting them? Use this for testing only: the texts, codes included, are posted to the group.">Use Telegram</button>
+                                <button th:unless="${app.channel.name() == 'SMS'}" class="button secondary small" type="submit"
+                                        data-confirm="Send this app's messages as real SMS from the phones again?">Use real SMS</button>
+                            </form>
+                            <form th:action="@{/apps/{id}/key(id=${app.id})}" method="post">
+                                <button class="button secondary small" type="submit"
+                                        data-confirm="Make a new key? The current key stops working at once.">New key</button>
+                            </form>
+                            <form th:action="@{/apps/{id}/enabled(id=${app.id})}" method="post">
+                                <input type="hidden" name="enabled" th:value="${!app.enabled}">
+                                <button th:if="${app.enabled}" class="button danger small" type="submit"
+                                        data-confirm="Disable this app? Its key is refused until you enable it.">Disable</button>
+                                <button th:unless="${app.enabled}" class="button secondary small" type="submit">Enable</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

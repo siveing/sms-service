@@ -1,0 +1,55 @@
+server:
+  port: ${PORT:8094}
+  # Behind an HTTPS proxy or tunnel on the same network: trust its X-Forwarded-* headers (https, host)
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: sms-gateway
+  # Local settings (console password, Telegram bot) from a git-ignored .env next to the project, if there is one
+  config:
+    import: "optional:file:.env[.properties]"
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:15433/sms_gateway}
+    username: ${DB_USERNAME:sms_gateway}
+    password: ${DB_PASSWORD:sms_gateway}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+
+gateway:
+  # The address apps and phones use from outside (e.g. https://sms.example.com); shown in setup commands.
+  # Empty = the address the console was opened with.
+  public-url: ${PUBLIC_URL:}
+  # The console account. No password = nobody can sign in. A {bcrypt}… hash works too.
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:}
+  # How long a message waits for a phone when the app does not say, and the longest it may ask for
+  default-validity: ${SMS_DEFAULT_VALIDITY:5m}
+  max-validity: ${SMS_MAX_VALIDITY:1h}
+  # How long a phone holds a message before another may take it, and how many tries a message gets
+  lease: ${SMS_LEASE:2m}
+  max-attempts: ${SMS_MAX_ATTEMPTS:3}
+  # A phone that asked for work within this is shown online
+  online-within: ${PHONE_ONLINE_WITHIN:30s}
+  # Times in the console
+  time-zone: ${TIME_ZONE:Asia/Phnom_Penh}
+  # Free test delivery: apps set to Telegram have their messages posted to this group by this bot
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    chat-id: ${TELEGRAM_CHAT_ID:}
+    # Optional: a topic in a group with Topics on (the number at the end of the topic's link)
+    topic-id: ${TELEGRAM_TOPIC_ID:}
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

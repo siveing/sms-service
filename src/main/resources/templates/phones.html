@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments :: head('Phones', false)}"></head>
+<body>
+<header th:replace="~{fragments :: topbar('phones')}"></header>
+<main class="page">
+    <div class="page-head">
+        <div>
+            <h1>Phones</h1>
+            <p class="muted">Android phones with a SIM card that text the messages. Each has its own key, sent in the X-Device-Key header.</p>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments :: flash}"></th:block>
+
+    <div class="banner key" th:if="${issued}">
+        <span class="title" th:text="|Key for ${issued.name}|">Key for Office phone</span>
+        <span class="muted">Copy it now. It is shown only this once; if it is lost, give the phone a new key.</span>
+        <div class="secret"><code id="issued-key" th:text="${issued.key}">sgp_…</code>
+            <button class="button secondary small" type="button" data-copy="issued-key">Copy</button></div>
+        <span class="muted small">On the phone, in Termux:</span>
+        <div class="secret"><code id="setup-command" th:text="${setupCommand}">curl …</code>
+            <button class="button secondary small" type="button" data-copy="setup-command">Copy</button></div>
+    </div>
+
+    <section class="card">
+        <div class="card-head">
+            <form class="inline-form" th:action="@{/phones}" th:object="${form}" method="post">
+                <div class="field">
+                    <label for="name">Add a phone</label>
+                    <input id="name" th:field="*{name}" placeholder="e.g. Office phone 1" maxlength="100" required>
+                </div>
+                <button class="button" type="submit">Add and make a key</button>
+            </form>
+        </div>
+        <div class="empty" th:if="${#lists.isEmpty(rows)}">No phones yet. Add one, then set it up with the steps below.</div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(rows)}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Phone</th>
+                    <th>State</th>
+                    <th>Last asked for work</th>
+                    <th class="num">Sent, 24 h</th>
+                    <th class="num">Failed, 24 h</th>
+                    <th>Key</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="phone : ${rows}">
+                    <td th:text="${phone.name}">Office phone</td>
+                    <td><span class="state"><span class="dot" th:classappend="${phone.state}"></span><span th:text="${phone.stateLabel}">Online</span></span></td>
+                    <td class="muted" th:text="${phone.lastSeen} ?: '—'">4 s ago</td>
+                    <td class="num" th:text="${phone.sent}">0</td>
+                    <td class="num" th:text="${phone.failed}">0</td>
+                    <td class="mono muted" th:text="${phone.keyHint}">sgp_ab12…</td>
+                    <td>
+                        <div class="actions">
+                            <form th:action="@{/phones/{id}/key(id=${phone.id})}" method="post">
+                                <button class="button secondary small" type="submit"
+                                        data-confirm="Make a new key? The phone stops working until it uses the new one.">New key</button>
+                            </form>
+                            <form th:action="@{/phones/{id}/enabled(id=${phone.id})}" method="post">
+                                <input type="hidden" name="enabled" th:value="${!phone.enabled}">
+                                <button th:if="${phone.enabled}" class="button danger small" type="submit"
+                                        data-confirm="Disable this phone? It gets no more messages until you enable it.">Disable</button>
+                                <button th:unless="${phone.enabled}" class="button secondary small" type="submit">Enable</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head"><h2>Set up a phone</h2></div>
+        <div class="card-body">
+            <ol class="steps">
+                <li>Put a SIM card with SMS credit in an Android phone and keep it on a charger.</li>
+                <li>Install <strong>Termux</strong> and <strong>Termux:API</strong> from F-Droid (the Play Store versions cannot send SMS).</li>
+                <li>Open Termux and run <code class="mono">pkg install termux-api curl jq</code>, then allow Termux:API to send SMS when asked.</li>
+                <li>In Android settings, turn off battery optimisation for Termux so it keeps running with the screen off.</li>
+                <li>Add the phone above, then run the command shown with its key. Its state turns <strong>Online</strong> within a few seconds.</li>
+            </ol>
+        </div>
+    </section>
+</main>
+</body>
+</html>

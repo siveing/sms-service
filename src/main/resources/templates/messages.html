@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments :: head('Messages', false)}"></head>
+<body>
+<header th:replace="~{fragments :: topbar('messages')}"></header>
+<main class="page">
+    <div class="page-head">
+        <div>
+            <h1>Messages</h1>
+            <p class="muted">Every SMS asked for, newest first. The text is never shown and is wiped once a message is done.</p>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments :: flash}"></th:block>
+
+    <section class="card">
+        <form class="filters" th:action="@{/messages}" method="get">
+            <div class="field">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">Any status</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}">SENT</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="number">Number</label>
+                <input id="number" name="number" th:value="${number}" placeholder="e.g. 012345678" inputmode="tel">
+            </div>
+            <button class="button secondary" type="submit">Filter</button>
+            <a th:if="${status != null or number != null}" th:href="@{/messages}">Clear</a>
+        </form>
+
+        <div class="empty" th:if="${result.total == 0}">No messages match.</div>
+        <div class="table-wrap" th:unless="${result.total == 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Asked</th>
+                    <th>To</th>
+                    <th>From</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                    <th class="num">Tries</th>
+                    <th>Sent by</th>
+                    <th>Sent</th>
+                    <th>Expires</th>
+                    <th class="num">Length</th>
+                    <th>Last error</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${result.rows}">
+                    <td class="muted" th:text="${m.created}">21 Oct, 14:02:11</td>
+                    <td class="mono" th:text="${m.to}">+855•••678</td>
+                    <td th:text="${m.source}">notification-service</td>
+                    <td class="mono muted" th:text="${m.reference} ?: '—'">otp-1</td>
+                    <td><span th:replace="~{fragments :: status(${m.status})}"></span></td>
+                    <td class="num" th:text="${m.attempts}">1</td>
+                    <td th:text="${m.phone} ?: '—'">Office phone</td>
+                    <td class="muted" th:text="${m.sentAt} ?: '—'">21 Oct, 14:02:15</td>
+                    <td class="muted" th:text="${m.expiresAt}">21 Oct, 14:07:11</td>
+                    <td class="num" th:text="${m.textLength}">32</td>
+                    <td class="wrap muted" th:text="${m.lastError} ?: ''"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pager" th:if="${result.totalPages > 1}">
+            <span class="muted small" th:text="|Page ${result.page + 1} of ${result.totalPages} · ${result.total} messages|">Page 1 of 3</span>
+            <div class="links">
+                <a class="button secondary small" th:if="${result.hasPrevious()}"
+                   th:href="@{/messages(status=${status}, number=${number}, page=${result.page - 1})}">Newer</a>
+                <a class="button secondary small" th:if="${result.hasNext()}"
+                   th:href="@{/messages(status=${status}, number=${number}, page=${result.page + 1})}">Older</a>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

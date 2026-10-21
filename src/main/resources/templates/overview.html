@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments :: head('Overview', true)}"></head>
+<body>
+<header th:replace="~{fragments :: topbar('overview')}"></header>
+<main class="page">
+    <div class="page-head">
+        <div>
+            <h1>Overview</h1>
+            <p class="muted">What is waiting, what went out, and which phones are working. Refreshes every 15 seconds.</p>
+        </div>
+        <a class="button" th:href="@{/send}">Send a test SMS</a>
+    </div>
+
+    <section class="tiles">
+        <div class="card tile" th:each="tile : ${overview.tiles}" th:classappend="${tile.tone}">
+            <span class="label" th:text="${tile.label}">Sent</span>
+            <span class="value" th:text="${tile.value}">0</span>
+            <span class="muted small" th:text="${tile.note}">last 24 hours</span>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <h2>Phones</h2>
+            <a th:href="@{/phones}">Manage phones</a>
+        </div>
+        <div class="empty" th:if="${#lists.isEmpty(overview.phones)}">
+            No phones yet. <a th:href="@{/phones}">Add a phone</a> and nothing is sent until one is online.
+        </div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(overview.phones)}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Phone</th>
+                    <th>State</th>
+                    <th>Last asked for work</th>
+                    <th class="num">Sent, 24 h</th>
+                    <th class="num">Failed, 24 h</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="phone : ${overview.phones}">
+                    <td th:text="${phone.name}">Office phone</td>
+                    <td><span class="state"><span class="dot" th:classappend="${phone.state}"></span><span th:text="${phone.stateLabel}">Online</span></span></td>
+                    <td class="muted" th:text="${phone.lastSeen} ?: '—'">4 s ago</td>
+                    <td class="num" th:text="${phone.sent}">0</td>
+                    <td class="num" th:text="${phone.failed}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <h2>Telegram (free test delivery)</h2>
+            <a th:href="@{/apps}">Choose which apps use it</a>
+        </div>
+        <div class="card-body">
+            <p th:if="${overview.telegram.configured}">
+                <span class="state"><span class="dot online"></span>
+                    <span>Posting to group <span class="mono" th:text="${overview.telegram.chat}">…1234</span></span></span>
+                <span class="muted">·
+                    <span th:text="${overview.telegram.sent}">0</span> posted,
+                    <span th:text="${overview.telegram.failed}">0</span> failed in the last 24 hours</span>
+            </p>
+            <p class="muted" th:unless="${overview.telegram.configured}">
+                Not set up. Start the gateway with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID, then switch a test app to
+                Telegram: its messages are posted to the group for free instead of texted.
+            </p>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <h2>Latest messages</h2>
+            <a th:href="@{/messages}">See all</a>
+        </div>
+        <div class="empty" th:if="${#lists.isEmpty(overview.recent)}">No messages yet.</div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(overview.recent)}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Asked</th>
+                    <th>To</th>
+                    <th>From</th>
+                    <th>Status</th>
+                    <th>Sent by</th>
+                    <th>Last error</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${overview.recent}">
+                    <td class="muted" th:text="${m.created}">21 Oct, 14:02:11</td>
+                    <td class="mono" th:text="${m.to}">+855•••678</td>
+                    <td th:text="${m.source}">notification-service</td>
+                    <td><span th:replace="~{fragments :: status(${m.status})}"></span></td>
+                    <td th:text="${m.phone} ?: '—'">Office phone</td>
+                    <td class="wrap muted" th:text="${m.lastError} ?: ''"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

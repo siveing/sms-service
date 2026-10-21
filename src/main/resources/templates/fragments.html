@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:fragment="head(title, refresh)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta th:if="${refresh}" http-equiv="refresh" content="15">
+    <title th:text="|${title} · SMS Gateway|">SMS Gateway</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/icon.svg}">
+    <link rel="stylesheet" th:href="@{/assets/app.css}">
+    <script th:src="@{/assets/app.js}" defer></script>
+</head>
+<body>
+
+<header th:fragment="topbar(active)" class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" th:href="@{/}"><img th:src="@{/assets/icon.svg}" alt="">SMS Gateway</a>
+        <nav class="nav">
+            <a th:href="@{/}" th:classappend="${active == 'overview'} ? 'active'">Overview</a>
+            <a th:href="@{/messages}" th:classappend="${active == 'messages'} ? 'active'">Messages</a>
+            <a th:href="@{/send}" th:classappend="${active == 'send'} ? 'active'">Send a test</a>
+            <a th:href="@{/phones}" th:classappend="${active == 'phones'} ? 'active'">Phones</a>
+            <a th:href="@{/apps}" th:classappend="${active == 'apps'} ? 'active'">Apps</a>
+            <a th:href="@{/swagger-ui.html}">API docs</a>
+        </nav>
+        <div class="account">
+            <span th:text="${username}">admin</span>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="link-button">Sign out</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<th:block th:fragment="flash">
+    <div class="banner notice" th:if="${notice}" th:text="${notice}">Saved.</div>
+    <div class="banner error" th:if="${error}" th:text="${error}">Something went wrong.</div>
+</th:block>
+
+<span th:fragment="status(value)" class="badge" th:classappend="${value}" th:text="${value}">SENT</span>
+
+</body>
+</html>

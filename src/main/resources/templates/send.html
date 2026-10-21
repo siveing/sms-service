@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments :: head('Send a test', false)}"></head>
+<body>
+<header th:replace="~{fragments :: topbar('send')}"></header>
+<main class="page">
+    <div class="page-head">
+        <div>
+            <h1>Send a test SMS</h1>
+            <p class="muted">Goes through the same queue as the apps, so it shows whether a phone is picking up work.</p>
+        </div>
+    </div>
+
+    <section class="card">
+        <div class="card-body">
+            <form class="stack" th:action="@{/send}" th:object="${form}" method="post">
+                <div class="field">
+                    <label for="to">To</label>
+                    <input id="to" th:field="*{to}" placeholder="012345678 or +85512345678" inputmode="tel" autofocus>
+                    <span class="error" th:if="${#fields.hasErrors('to')}" th:errors="*{to}">Enter a number</span>
+                </div>
+                <div class="field">
+                    <label for="text">Text</label>
+                    <textarea id="text" th:field="*{text}" data-sms-counter="sms-count"></textarea>
+                    <span class="hint" id="sms-count">0 characters</span>
+                    <span class="error" th:if="${#fields.hasErrors('text')}" th:errors="*{text}">Enter the text</span>
+                </div>
+                <div class="field">
+                    <label for="channel">Deliver by</label>
+                    <select id="channel" th:field="*{channel}">
+                        <option th:each="c : ${channels}" th:value="${c}"
+                                th:text="${c.name() == 'TELEGRAM'} ? 'Telegram test group (free)' : 'Real SMS from a phone'">Real SMS</option>
+                    </select>
+                    <span class="hint" th:if="${telegram.configured}">Telegram posts the text to the test group instead of texting it.</span>
+                    <span class="error" th:unless="${telegram.configured}">Telegram is not set up yet, so a Telegram message would wait and expire.</span>
+                </div>
+                <div class="field">
+                    <label for="validSeconds">Give up after (seconds)</label>
+                    <input id="validSeconds" th:field="*{validSeconds}" type="number" min="30" max="86400">
+                    <span class="hint">If no phone has sent it by then, it expires instead of arriving late.</span>
+                    <span class="error" th:if="${#fields.hasErrors('validSeconds')}" th:errors="*{validSeconds}">At least 30 seconds</span>
+                </div>
+                <div>
+                    <button class="button" type="submit">Queue it</button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

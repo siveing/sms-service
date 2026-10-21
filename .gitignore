@@ -1,0 +1,26 @@
+target/
+*.class
+*.jar
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+
+# Env
+.env
+.env.local
+
+# Application
+application-local.yml
+
+.claude
+# Local tooling
+.claude/

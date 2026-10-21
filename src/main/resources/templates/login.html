@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments :: head('Sign in', false)}"></head>
+<body>
+<main class="signin">
+    <div class="card">
+        <div class="card-body">
+            <span class="brand"><img th:src="@{/assets/icon.svg}" alt="">SMS Gateway</span>
+            <div>
+                <h1>Sign in</h1>
+                <p class="muted">To the console of your SMS gateway.</p>
+            </div>
+
+            <div class="banner error" th:unless="${signInOn}">
+                Sign-in is off. Start the gateway with ADMIN_PASSWORD set.
+            </div>
+            <div class="banner error" th:if="${param.failed}">Wrong username or password.</div>
+            <div class="banner notice" th:if="${param.signedOut}">You are signed out.</div>
+
+            <form class="stack" th:action="@{/login}" method="post">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" name="username" autocomplete="username" required autofocus>
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <button class="button" type="submit">Sign in</button>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>
